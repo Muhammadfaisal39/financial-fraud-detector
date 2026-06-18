@@ -78,3 +78,56 @@ print("\n=== SCALING DONE ===")
 print(df[['Amount', 'Amount_scaled', 'Time', 'Time_scaled']].head())
 
 print("\n✅ Data exploration and cleaning complete!")
+
+# -----------------------------------------------
+# Day 3 — Train the Isolation Forest Model
+# -----------------------------------------------
+
+from sklearn.ensemble import IsolationForest
+
+# -----------------------------------------------
+# Prepare the features (input) for the model
+# -----------------------------------------------
+
+# We use V1-V28 plus our scaled Amount and Time
+# We drop the original Amount, Time, and Class
+features = [col for col in df.columns if col not in ['Time', 'Amount', 'Class']]
+
+X = df[features]
+
+print("\n=== FEATURES USED FOR TRAINING ===")
+print(features)
+print("\nTotal features:", len(features))
+
+# -----------------------------------------------
+# Train the Isolation Forest
+# -----------------------------------------------
+
+# contamination = expected proportion of anomalies (fraud) in the data
+# We know fraud is about 0.17% from Day 1, so we set it close to that
+model = IsolationForest(
+    n_estimators=100,
+    contamination=0.0017,
+    random_state=42
+)
+
+print("\n⏳ Training Isolation Forest... (this may take a minute)")
+model.fit(X)
+
+print("✅ Model trained successfully!")
+
+# -----------------------------------------------
+# Make predictions
+# -----------------------------------------------
+
+# The model returns: 1 = normal, -1 = anomaly (flagged as fraud)
+predictions = model.predict(X)
+
+# Convert to easier format: 0 = normal, 1 = flagged as anomaly
+df['anomaly'] = [1 if p == -1 else 0 for p in predictions]
+
+print("\n=== MODEL PREDICTIONS ===")
+print(df['anomaly'].value_counts())
+
+flagged_count = df['anomaly'].sum()
+print(f"\nTotal transactions flagged as anomalies: {flagged_count}")
