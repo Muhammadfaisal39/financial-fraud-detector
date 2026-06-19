@@ -203,3 +203,116 @@ print(f"✅ Real fraud caught:           {tp} out of {tp+fn}")
 print(f"❌ Real fraud missed:           {fn} out of {tp+fn}")
 print(f"⚠️  Innocent transactions flagged: {fp} out of {tn+fp}")
 print(f"✅ Normal transactions cleared: {tn} out of {tn+fp}")
+
+# -----------------------------------------------
+# Day 5 — Fix Imbalance with SMOTE
+# -----------------------------------------------
+
+from imblearn.over_sampling import SMOTE
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (classification_report,
+                             confusion_matrix,
+                             precision_score,
+                             recall_score,
+                             f1_score)
+
+print("\n=== DAY 5: FIXING IMBALANCED DATASET WITH SMOTE ===")
+
+# -----------------------------------------------
+# Prepare data
+# -----------------------------------------------
+
+# Separate features and labels
+X_data = df[features]
+y_data = df['Class']
+
+print(f"Before SMOTE — Normal: {sum(y_data==0)}, Fraud: {sum(y_data==1)}")
+
+# -----------------------------------------------
+# Split into train and test BEFORE applying SMOTE
+# -----------------------------------------------
+
+# Important: we apply SMOTE only on training data
+# Test data must stay real — no synthetic samples
+X_train, X_test, y_train, y_test = train_test_split(
+    X_data, y_data,
+    test_size=0.2,
+    random_state=42,
+    stratify=y_data  # keeps fraud ratio same in both splits
+)
+
+print(f"\nTraining set — Normal: {sum(y_train==0)}, Fraud: {sum(y_train==1)}")
+print(f"Test set     — Normal: {sum(y_test==0)},  Fraud: {sum(y_test==1)}")
+
+# -----------------------------------------------
+# Apply SMOTE to training data only
+# -----------------------------------------------
+
+smote = SMOTE(random_state=42)
+X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
+
+print(f"\nAfter SMOTE — Normal: {sum(y_train_balanced==0)}, "
+      f"Fraud: {sum(y_train_balanced==1)}")
+print("✅ Dataset is now balanced!")
+
+# -----------------------------------------------
+# Train Random Forest on balanced data
+# -----------------------------------------------
+
+print("\n⏳ Training Random Forest on balanced data...")
+
+rf_balanced = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+rf_balanced.fit(X_train_balanced, y_train_balanced)
+
+print("✅ Model trained successfully!")
+
+# -----------------------------------------------
+# Evaluate on REAL test data
+# -----------------------------------------------
+
+y_pred_balanced = rf_balanced.predict(X_test)
+
+precision_b = precision_score(y_test, y_pred_balanced)
+recall_b = recall_score(y_test, y_pred_balanced)
+f1_b = f1_score(y_test, y_pred_balanced)
+
+print("\n=== RESULTS AFTER SMOTE ===")
+print(f"Precision: {precision_b:.4f} ({precision_b*100:.1f}%)")
+print(f"Recall:    {recall_b:.4f} ({recall_b*100:.1f}%)")
+print(f"F1 Score:  {f1_b:.4f} ({f1_b*100:.1f}%)")
+
+print("\n=== DETAILED REPORT ===")
+print(classification_report(y_test, y_pred_balanced,
+      target_names=['Normal', 'Fraud']))
+
+# -----------------------------------------------
+# New Confusion Matrix
+# -----------------------------------------------
+
+cm_balanced = confusion_matrix(y_test, y_pred_balanced)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm_balanced, annot=True, fmt='d', cmap='Greens',
+            xticklabels=['Predicted Normal', 'Predicted Fraud'],
+            yticklabels=['Actually Normal', 'Actually Fraud'])
+plt.title('Confusion Matrix After SMOTE — Improved Results', fontsize=14)
+plt.tight_layout()
+plt.savefig('confusion_matrix_smote.png')
+plt.show()
+
+print("\n✅ Improved confusion matrix saved!")
+
+# -----------------------------------------------
+# Before vs After Comparison
+# -----------------------------------------------
+
+print("\n=== BEFORE vs AFTER SMOTE ===")
+print(f"{'Metric':<12} {'Before SMOTE':>15} {'After SMOTE':>15}")
+print("-" * 44)
+print(f"{'Precision':<12} {'27.8%':>15} {f'{precision_b*100:.1f}%':>15}")
+print(f"{'Recall':<12} {'27.4%':>15} {f'{recall_b*100:.1f}%':>15}")
+print(f"{'F1 Score':<12} {'27.6%':>15} {f'{f1_b*100:.1f}%':>15}")
