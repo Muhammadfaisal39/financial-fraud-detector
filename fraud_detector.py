@@ -131,3 +131,75 @@ print(df['anomaly'].value_counts())
 
 flagged_count = df['anomaly'].sum()
 print(f"\nTotal transactions flagged as anomalies: {flagged_count}")
+
+# -----------------------------------------------
+# Day 4 — Evaluate the Model
+# -----------------------------------------------
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    precision_score,
+    recall_score,
+    f1_score
+)
+
+print("\n=== MODEL EVALUATION ===")
+
+# Compare model predictions against real fraud labels
+y_true = df['Class']      # Real labels (0=normal, 1=fraud)
+y_pred = df['anomaly']    # Model predictions (0=normal, 1=flagged)
+
+# -----------------------------------------------
+# Precision, Recall, F1
+# -----------------------------------------------
+
+precision = precision_score(y_true, y_pred)
+recall = recall_score(y_true, y_pred)
+f1 = f1_score(y_true, y_pred)
+
+print(f"Precision: {precision:.4f} ({precision*100:.1f}%)")
+print(f"Recall:    {recall:.4f} ({recall*100:.1f}%)")
+print(f"F1 Score:  {f1:.4f} ({f1*100:.1f}%)")
+
+print("\nIn plain English:")
+print(f"Out of transactions we flagged — {precision*100:.1f}% were real fraud")
+print(f"Out of all real fraud — we caught {recall*100:.1f}% of them")
+
+print("\n=== DETAILED REPORT ===")
+print(classification_report(y_true, y_pred,
+      target_names=['Normal', 'Fraud']))
+
+# -----------------------------------------------
+# Confusion Matrix
+# -----------------------------------------------
+
+cm = confusion_matrix(y_true, y_pred)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Predicted Normal', 'Predicted Fraud'],
+            yticklabels=['Actually Normal', 'Actually Fraud'])
+plt.title('Confusion Matrix — Fraud Detection Results', fontsize=14)
+plt.tight_layout()
+plt.savefig('confusion_matrix.png')
+plt.show()
+
+print("\n✅ Confusion matrix saved as confusion_matrix.png")
+
+# -----------------------------------------------
+# Summary in plain English
+# -----------------------------------------------
+
+tn = cm[0][0]  # Normal correctly identified
+fp = cm[0][1]  # Normal wrongly flagged as fraud
+fn = cm[1][0]  # Fraud missed by model
+tp = cm[1][1]  # Fraud correctly caught
+
+print("\n=== RESULTS SUMMARY ===")
+print(f"✅ Real fraud caught:           {tp} out of {tp+fn}")
+print(f"❌ Real fraud missed:           {fn} out of {tp+fn}")
+print(f"⚠️  Innocent transactions flagged: {fp} out of {tn+fp}")
+print(f"✅ Normal transactions cleared: {tn} out of {tn+fp}")
