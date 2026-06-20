@@ -1,3 +1,4 @@
+📄 [Read the full Research Summary](RESEARCH_SUMMARY.md) connecting both projects
 # 🔍 Financial Fraud Detector
 
 An unsupervised Machine Learning project that detects 
