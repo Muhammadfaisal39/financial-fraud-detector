@@ -316,3 +316,77 @@ print("-" * 44)
 print(f"{'Precision':<12} {'27.8%':>15} {f'{precision_b*100:.1f}%':>15}")
 print(f"{'Recall':<12} {'27.4%':>15} {f'{recall_b*100:.1f}%':>15}")
 print(f"{'F1 Score':<12} {'27.6%':>15} {f'{f1_b*100:.1f}%':>15}")
+
+# -----------------------------------------------
+# Day 6 — Explain Predictions with SHAP
+# -----------------------------------------------
+
+import shap
+
+print("\n=== DAY 6: SHAP EXPLAINABILITY ===")
+print("⏳ Generating SHAP explanations... this may take a minute")
+
+# Create SHAP explainer for our balanced Random Forest model
+explainer = shap.TreeExplainer(rf_balanced)
+
+# Calculate SHAP values for a sample of test data
+# (using a sample of 500 to keep it fast)
+X_test_sample = X_test.sample(n=500, random_state=42)
+shap_values = explainer.shap_values(X_test_sample)
+
+# For binary classification, shap_values has 2 sets
+# We want the "fraud" class explanations (index 1)
+if isinstance(shap_values, list):
+    fraud_shap_values = shap_values[1]
+else:
+    fraud_shap_values = shap_values[:, :, 1]
+
+# -----------------------------------------------
+# Overall feature importance — which features matter most?
+# -----------------------------------------------
+
+plt.figure(figsize=(10, 8))
+shap.summary_plot(fraud_shap_values, X_test_sample,
+                  show=False)
+plt.title("SHAP — Which Features Matter Most for Fraud Detection?",
+          fontsize=14)
+plt.tight_layout()
+plt.savefig('shap_summary.png')
+plt.show()
+
+print("✅ SHAP summary plot saved as shap_summary.png")
+
+# -----------------------------------------------
+# Explain ONE specific fraud prediction
+# -----------------------------------------------
+
+# Find one actual fraud case in our sample
+fraud_indices = y_test.loc[X_test_sample.index][y_test.loc[X_test_sample.index] == 1].index
+
+if len(fraud_indices) > 0:
+    sample_fraud_idx = fraud_indices[0]
+    position = X_test_sample.index.get_loc(sample_fraud_idx)
+
+    print(f"\n=== EXPLAINING ONE FRAUD CASE ===")
+    print(f"Transaction details:")
+    print(X_test_sample.loc[sample_fraud_idx])
+
+    # Force plot for this single prediction
+    plt.figure(figsize=(12, 4))
+    shap.waterfall_plot(
+        shap.Explanation(
+            values=fraud_shap_values[position],
+            base_values=explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value,
+            data=X_test_sample.iloc[position],
+            feature_names=X_test_sample.columns.tolist()
+        ),
+        show=False
+    )
+    plt.title("Why Was THIS Transaction Flagged as Fraud?", fontsize=12)
+    plt.tight_layout()
+    plt.savefig('shap_single_explanation.png')
+    plt.show()
+
+    print("✅ Single prediction explanation saved as shap_single_explanation.png")
+
+print("\n🎉 Project complete with full explainability!")
