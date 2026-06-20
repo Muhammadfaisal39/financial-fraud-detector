@@ -94,7 +94,29 @@ the dataset and improve fraud detection performance.
 
 ![Confusion Matrix - After SMOTE](confusion_matrix_smote.png)
 ---
+## 🔍 Explainability — SHAP Analysis
 
+Using SHAP (SHapley Additive exPlanations), we identified 
+which features most strongly influence fraud predictions.
+
+![SHAP Summary](shap_summary.png)
+
+**Key Findings:**
+- V14, V12, and V4 emerged as the three strongest fraud 
+  indicators
+- Low values of V14 and V12 are strongly associated with 
+  fraudulent transactions
+- High values of V4 push predictions toward fraud — an 
+  inverse pattern compared to V14/V12
+- These findings align with patterns reported in existing 
+  financial fraud detection literature, validating that 
+  the model learns genuine fraud signals rather than 
+  spurious correlations
+
+This explainability layer transforms the model from a 
+black-box classifier into a transparent decision-support 
+tool — directly addressing the interpretability gap 
+identified in financial ML research.
 ## 🛠️ Tech Stack
 
 - **Python** — Core programming language
