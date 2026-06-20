@@ -59,7 +59,7 @@ the dataset and improve fraud detection performance.
 
 ## 📉 Results
 
-### Isolation Forest (Unsupervised — No Labels Used)
+### Approach 1 — Isolation Forest (Unsupervised, No Labels)
 
 | Metric | Score |
 |---|---|
@@ -67,17 +67,32 @@ the dataset and improve fraud detection performance.
 | Recall | 27.4% |
 | F1 Score | 27.6% |
 | Real fraud caught | 135 out of 492 |
-| Innocent transactions flagged | 350 out of 284,315 |
 
-### Confusion Matrix
+> Confirmed a well-documented challenge in financial ML 
+> research — unsupervised models struggle on severely 
+> imbalanced data (only 0.17% fraud).
 
-![Confusion Matrix](confusion_matrix.png)
+![Confusion Matrix - Isolation Forest](confusion_matrix.png)
 
-> These results are expected for unsupervised anomaly 
-> detection on highly imbalanced data. The model caught 
-> 135 fraud cases with zero prior knowledge of what 
-> fraud looks like — motivating supervised approaches.
+---
 
+### Approach 2 — Random Forest + SMOTE (Supervised, Balanced Data)
+
+| Metric | Before SMOTE | After SMOTE |
+|---|---|---|
+| Precision | 27.8% | **82.5%** |
+| Recall | 27.4% | **81.6%** |
+| F1 Score | 27.6% | **82.1%** |
+
+> Applying SMOTE to balance the training data and 
+> switching to a supervised Random Forest classifier 
+> improved F1 score by 54.5 percentage points — 
+> demonstrating that combining supervised learning 
+> with synthetic balancing significantly outperforms 
+> unsupervised anomaly detection on imbalanced 
+> financial data.
+
+![Confusion Matrix - After SMOTE](confusion_matrix_smote.png)
 ---
 
 ## 🛠️ Tech Stack
@@ -125,12 +140,10 @@ python fraud_detector.py
 
 ## 🔮 Next Steps
 
-- Apply SMOTE to fix the imbalanced dataset problem
-- Retrain with balanced data and compare results
 - Add SHAP explainability — show WHY each 
-  transaction was flagged
+  transaction was flagged as fraud
 - Build a complete research summary document
-
+- Compare additional models (XGBoost, Neural Networks)
 ---
 
 ## 🔗 Related Project
